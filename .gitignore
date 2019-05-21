@@ -3,6 +3,12 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Images
+*.jpg
+
+# Specific virtual environments
+searchImage/venv*/
+
 # C extensions
 *.so
 
