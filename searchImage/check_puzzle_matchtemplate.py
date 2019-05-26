@@ -4,6 +4,9 @@ import collections
 from matplotlib import pyplot as plt
 PLOT = True
 VERBOSE = True
+CANNY = False
+CHEAT_MODE = True
+BEST_MATCH_ONLY = False
 
 
 def show_image(image):
@@ -20,97 +23,112 @@ def scaled_image(image, pix_size):
         return cv2.resize(image, (w, h), interpolation=cv2.INTER_AREA)
 
 
-def search_within_folders(target_image, result_vec, global_min_val):
-    for folder in os.listdir(targetpath):
-        print("In folder ", folder)
-        for picture in os.listdir(targetpath + folder):
+def draw_rect(locations, delta_x, delta_y):
+    x_init, y_init = locations
+    plt.plot((x_init, x_init), (y_init, y_init + delta_y), 'r', linewidth=2.0)
+    plt.plot((x_init, x_init + delta_x), (y_init, y_init), 'r', linewidth=2.0)
+    plt.plot((x_init + delta_x, x_init + delta_x), (y_init, y_init + delta_y), 'r', linewidth=2.0)
+    plt.plot((x_init, x_init + delta_x), (y_init + delta_y, y_init + delta_y), 'r', linewidth=2.0)
+
+
+def search_within_folders(needle_image, haystack_path, disparity):
+    result_list = []
+    for folder in os.listdir(haystack_path):
+        if VERBOSE:
+            print("In folder ", folder)
+        for picture in os.listdir(haystack_path + folder):
             if '.jpg' not in picture:
                 continue
-            if folder not in ('1', '103', '47', '165'):
-                continue
-            img = cv2.imread(targetpath + folder + "/" + picture, 0)
-            # wt, ht = target_image.shape[::-1]
-            # img = cv2.Canny(img, wt, ht)
-            # show_image(img)
+            if CHEAT_MODE:
+                if folder not in ('1', '103', '47', '121', '165'):
+                    continue
+            haystack_image = cv2.imread(haystack_path + folder + "/" + picture, 0)
+            if CANNY:
+                w_needle, h_needle = needle_image.shape[::-1]
+                needle_image = cv2.Canny(needle_image, w_needle, h_needle)
+                w_haystack, h_haystack = haystack_image.shape[::-1]
+                haystack_image = cv2.Canny(haystack_image, w_haystack, w_haystack)
 
             # Apply template Matching
-            try:
-                res = cv2.matchTemplate(img, target_image, method)
-            except:
-                continue
+            res = cv2.matchTemplate(haystack_image, needle_image, method)
 
             min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-            if min_val < global_min_val:
-                global_min_val = min_val
+
+            print("folder = ", folder)
+            print("path = ", haystack_path + folder + "/" + picture)
+            print("min value = ", min_val)
+            print("min loc = ", min_loc)
+            if min_val < disparity:
+                disparity = min_val
                 if VERBOSE:
                     print("folder = ", folder)
-                    print("path = ", targetpath + folder + "/" + picture)
-                result = collections.defaultdict(dict)#{}
+                    print("path = ", haystack_path + folder + "/" + picture)
+                    print("min value = ", min_val)
+                    print("min loc = ", min_loc)
+                result = collections.defaultdict(dict)
                 result["folder"] = folder
-                result["path"] = targetpath + folder + "/" + picture
+                result["path"] = haystack_path + folder + "/" + picture
                 result["min_val"] = min_val
                 result["location"] = min_loc
-                if folder in (entry["folder"] for entry in result_vec):
+                result["pixel"] = needle_image.shape[::-1]
+                if folder in (entry["folder"] for entry in result_list):
                     pass
                 else:
                     result["count"] = 1
-                    result_vec.append(result)
-                for entry in result_vec:
+                    result_list.append(result)
+                for entry in result_list:
                     if folder in entry["folder"]:
                         entry["count"] += 1
-    return result_vec, global_min_val
+    return result_list, disparity
 
 
-targetpath = '../get_images/Pictures/'
-puzzlepath = '../puzzle3.jpg'
-# puzzlepath = '../coverraetsel_1705.jpg'
-pixel_size_vec = [50] # np.linspace(50, 50, (150-30)/5)
-puzzle = cv2.imread(puzzlepath, 0)
-method = eval('cv2.TM_SQDIFF_NORMED')
+dataset_path = '../get_images/Pictures/'
+puzzle_path = '../puzzle3.jpg'
+puzzle_path = '../coverraetsel_1705.jpg'
+puzzle_path = '../puzzle.jpg'
+pixel_size_vec = [50]  # np.linspace(50, 50, (150-30)/5)
+puzzle_image = cv2.imread(puzzle_path, 0)
+method = cv2.TM_SQDIFF_NORMED
 
-
-# puzzle = cv2.Canny(puzzle, w, h)
-show_image(puzzle)
-result_vec = []
-global_min_val = 100
+if VERBOSE:
+    show_image(puzzle_image)
+results = []
+result_set = []
 
 
 for pixel_size in pixel_size_vec:
-    puzzle_scaled = scaled_image(puzzle, pixel_size)
-    print("pixel_size: ", pixel_size)
-    result_vec, global_min_val = search_within_folders(puzzle_scaled, result_vec, global_min_val)
+    puzzle_image_scaled = scaled_image(puzzle_image, pixel_size)
+    if VERBOSE:
+        print("pixel_size: ", pixel_size)
+    results, __ = search_within_folders(puzzle_image_scaled, dataset_path, 100)
+    result_set = [results[-1]] if BEST_MATCH_ONLY else results[::-1]
 
 if VERBOSE:
-    print(result_vec)
-for guess in [result_vec[-1]]:# or ::-1
-    print("guess = ", guess)
-    print(guess["min_val"])
-    try:
-        candidate_path = guess["path"]
-        if PLOT:
-            img = cv2.imread(candidate_path, 0)
-            wt, ht = puzzle_scaled.shape[::-1]
-            # w_img, h_img = img.shape[::-1]
-            # img = cv2.Canny(img, w_img, h_img)
-            try:
-                res = cv2.matchTemplate(img, puzzle_scaled, method)
-            except:
-                continue
-            min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
-            top_left = min_loc
-            bottom_right = (top_left[0] + wt, top_left[1] + ht)
+    print("Possible folder candidates are:")
+    for result in results:
+        print(result["folder"])
+for candidate in result_set:
+    if VERBOSE:
+        print("guess = ", candidate["folder"])
+        print("min value = ", candidate["min_val"])
+    candidate_path = candidate["path"]
+    if PLOT:
+        dataset_image = cv2.imread(candidate_path, 0)
+        if CANNY:
+            w_puzzle, h_puzzle = puzzle_image.shape[::-1]
+            puzzle_image = cv2.Canny(puzzle_image, w_puzzle, h_puzzle)
+            w_dataset, h_dataset = dataset_image.shape[::-1]
+            dataset_image = cv2.Canny(dataset_image, w_dataset, h_dataset)
+        w_puzzle, h_puzzle = candidate["pixel"]
+        pixel_size = max(w_puzzle, h_puzzle)
+        needle_image_scaled = scaled_image(puzzle_image, pixel_size)
 
-            cv2.rectangle(img, top_left, bottom_right, 255, 2)
+        plt.subplot(121), plt.imshow(needle_image_scaled, cmap='gray')
+        plt.title('Matching Result'), plt.xticks([]), plt.yticks([])
+        plt.subplot(122), plt.imshow(dataset_image, cmap='gray')
+        draw_rect(candidate["location"], w_puzzle, h_puzzle)
 
-            plt.subplot(121), plt.imshow(puzzle_scaled, cmap='gray')
-            plt.title('Matching Result'), plt.xticks([]), plt.yticks([])
-            plt.subplot(122), plt.imshow(img, cmap='gray')
-            plt.title('Detected Point'), plt.xticks([]), plt.yticks([])
-            plt.suptitle('cv2.TM_SQDIFF_NORMED')
+        plt.title('Detected Point'), plt.xticks([]), plt.yticks([])
+        plt.suptitle('cv2.TM_SQDIFF_NORMED')
 
-            plt.show()
-
-    except:
-        if VERBOSE:
-            print("ignoring ", guess["folder"])
-
+        plt.show()
