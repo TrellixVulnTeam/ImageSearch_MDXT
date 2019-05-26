@@ -90,7 +90,6 @@ for guess in [result_vec[-1]]:# or ::-1
         if PLOT:
             img = cv2.imread(candidate_path, 0)
             wt, ht = puzzle_scaled.shape[::-1]
-            print("wt = ", wt, ht)
             # w_img, h_img = img.shape[::-1]
             # img = cv2.Canny(img, w_img, h_img)
             try:
@@ -99,7 +98,6 @@ for guess in [result_vec[-1]]:# or ::-1
                 continue
             min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
             top_left = min_loc
-            print("min loc = ", min_loc)
             bottom_right = (top_left[0] + wt, top_left[1] + ht)
 
             cv2.rectangle(img, top_left, bottom_right, 255, 2)
@@ -113,5 +111,6 @@ for guess in [result_vec[-1]]:# or ::-1
             plt.show()
 
     except:
-        print("ignoring ", guess["folder"])
+        if VERBOSE:
+            print("ignoring ", guess["folder"])
 
