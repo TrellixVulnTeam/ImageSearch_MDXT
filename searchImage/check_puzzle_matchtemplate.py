@@ -13,7 +13,7 @@ NEEDLE_SIZE_PIXELS = 50
 
 def show_image(image):
     cv2.imshow('image', image)
-    cv2.waitKey(0)
+    cv2.waitKey(1500)
     cv2.destroyAllWindows()
 
 
@@ -87,7 +87,6 @@ puzzle_path = '../coverraetsel_3105.jpg'
 puzzle_path = '../coverraetsel_1704.jpg'
 puzzle_path = '../coverraetsel_0305.jpg'
 pixel_size_vec = [NEEDLE_SIZE_PIXELS]#np.linspace(30, 150, (150-30)/5)
-#print(NEEDLE_SIZE_PIXELS)
 puzzle_image = cv2.imread(puzzle_path, 0)
 method = cv2.TM_SQDIFF_NORMED
 
