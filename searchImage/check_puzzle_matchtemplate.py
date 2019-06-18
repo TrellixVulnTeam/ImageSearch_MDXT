@@ -5,8 +5,10 @@ from matplotlib import pyplot as plt
 PLOT = True
 VERBOSE = True
 CANNY = False
-CHEAT_MODE = True
-BEST_MATCH_ONLY = False
+CHEAT_MODE = False
+BEST_MATCH_ONLY = True
+HAY_SIZE_PIXELS = 200
+NEEDLE_SIZE_PIXELS = 50
 
 
 def show_image(image):
@@ -17,10 +19,9 @@ def show_image(image):
 
 def scaled_image(image, pix_size):
     w, h = image.shape[::-1]
-    if max(w, h) > pix_size:
-        z = max(w, h)/pix_size
-        w, h = int(w/z), int(h/z)
-        return cv2.resize(image, (w, h), interpolation=cv2.INTER_AREA)
+    z = max(w, h)/pix_size
+    w, h = int(w/z), int(h/z)
+    return cv2.resize(image, (w, h), interpolation=cv2.INTER_AREA)
 
 
 def draw_rect(locations, delta_x, delta_y):
@@ -40,9 +41,10 @@ def search_within_folders(needle_image, haystack_path, disparity):
             if '.jpg' not in picture:
                 continue
             if CHEAT_MODE:
-                if folder not in ('1', '103', '47', '121', '165'):
+                if folder not in ('1', '103', '47', '121', '165', '34'):
                     continue
             haystack_image = cv2.imread(haystack_path + folder + "/" + picture, 0)
+            haystack_image = scaled_image(haystack_image, HAY_SIZE_PIXELS)
             if CANNY:
                 w_needle, h_needle = needle_image.shape[::-1]
                 needle_image = cv2.Canny(needle_image, w_needle, h_needle)
@@ -54,10 +56,6 @@ def search_within_folders(needle_image, haystack_path, disparity):
 
             min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
 
-            print("folder = ", folder)
-            print("path = ", haystack_path + folder + "/" + picture)
-            print("min value = ", min_val)
-            print("min loc = ", min_loc)
             if min_val < disparity:
                 disparity = min_val
                 if VERBOSE:
@@ -83,10 +81,13 @@ def search_within_folders(needle_image, haystack_path, disparity):
 
 
 dataset_path = '../get_images/Pictures/'
-puzzle_path = '../puzzle3.jpg'
 puzzle_path = '../coverraetsel_1705.jpg'
-puzzle_path = '../puzzle.jpg'
-pixel_size_vec = [50]  # np.linspace(50, 50, (150-30)/5)
+puzzle_path = '../coverraetsel_1406.webp'
+puzzle_path = '../coverraetsel_3105.jpg'
+puzzle_path = '../coverraetsel_1704.jpg'
+puzzle_path = '../coverraetsel_0305.jpg'
+pixel_size_vec = [NEEDLE_SIZE_PIXELS]#np.linspace(30, 150, (150-30)/5)
+#print(NEEDLE_SIZE_PIXELS)
 puzzle_image = cv2.imread(puzzle_path, 0)
 method = cv2.TM_SQDIFF_NORMED
 
@@ -114,6 +115,7 @@ for candidate in result_set:
     candidate_path = candidate["path"]
     if PLOT:
         dataset_image = cv2.imread(candidate_path, 0)
+        dataset_image = scaled_image(dataset_image, 200)
         if CANNY:
             w_puzzle, h_puzzle = puzzle_image.shape[::-1]
             puzzle_image = cv2.Canny(puzzle_image, w_puzzle, h_puzzle)
