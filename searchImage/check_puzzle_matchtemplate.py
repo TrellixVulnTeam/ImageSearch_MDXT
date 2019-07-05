@@ -2,13 +2,17 @@ import cv2
 import os
 import collections
 from matplotlib import pyplot as plt
+import numpy as np
 PLOT = True
 VERBOSE = True
 CANNY = False
 CHEAT_MODE = False
-BEST_MATCH_ONLY = True
+BEST_MATCH_ONLY = False
+CHEAT_FOLDERS = ['103', '47', '121', '165', '34', '158', '55']
 HAY_SIZE_PIXELS = 200
-NEEDLE_SIZE_PIXELS = 50
+NEEDLE_SIZE_PIXELS = 40
+NEEDLE_MIN_PIXEL_SIZE = 30
+NEEDLE_MAX_PIXEL_SIZE = 60
 
 
 def show_image(image):
@@ -41,7 +45,7 @@ def search_within_folders(needle_image, haystack_path, disparity):
             if '.jpg' not in picture:
                 continue
             if CHEAT_MODE:
-                if folder not in ('1', '103', '47', '121', '165', '34'):
+                if folder not in CHEAT_FOLDERS:
                     continue
             haystack_image = cv2.imread(haystack_path + folder + "/" + picture, 0)
             haystack_image = scaled_image(haystack_image, HAY_SIZE_PIXELS)
@@ -81,14 +85,20 @@ def search_within_folders(needle_image, haystack_path, disparity):
 
 
 dataset_path = '../get_images/Pictures/'
-puzzle_path = '../coverraetsel_1705.jpg'
-puzzle_path = '../coverraetsel_1406.webp'
-puzzle_path = '../coverraetsel_3105.jpg'
+puzzle_path = '../coverraetsel_0507.webp'#passed
+puzzle_path = '../coverraetsel_2806.webp'#passed
+puzzle_path = '../coverraetsel_2106.webp'#passed
 puzzle_path = '../coverraetsel_1704.jpg'
-puzzle_path = '../coverraetsel_0305.jpg'
-pixel_size_vec = [NEEDLE_SIZE_PIXELS]#np.linspace(30, 150, (150-30)/5)
+puzzle_path = '../coverraetsel_0305.jpg'#passed
+puzzle_path = '../coverraetsel_3105.jpg'#passed
+puzzle_path = '../coverraetsel_1705.jpg'#passed
+puzzle_path = '../coverraetsel_1406.webp'#passed
+
+pixel_size_vec = np.linspace(NEEDLE_MIN_PIXEL_SIZE, NEEDLE_MAX_PIXEL_SIZE,
+                             int((NEEDLE_MAX_PIXEL_SIZE-NEEDLE_MIN_PIXEL_SIZE)/5))
 puzzle_image = cv2.imread(puzzle_path, 0)
 method = cv2.TM_SQDIFF_NORMED
+
 
 if VERBOSE:
     show_image(puzzle_image)
@@ -101,7 +111,7 @@ for pixel_size in pixel_size_vec:
     if VERBOSE:
         print("pixel_size: ", pixel_size)
     results, __ = search_within_folders(puzzle_image_scaled, dataset_path, 100)
-    result_set = [results[-1]] if BEST_MATCH_ONLY else results[::-1]
+    result_set = result_set + [results[-1]] if BEST_MATCH_ONLY else result_set + results[::-1]
 
 if VERBOSE:
     print("Possible folder candidates are:")
