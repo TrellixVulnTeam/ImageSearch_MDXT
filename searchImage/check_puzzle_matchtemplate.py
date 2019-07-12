@@ -7,7 +7,7 @@ PLOT = True
 VERBOSE = True
 CANNY = False
 CHEAT_MODE = False
-BEST_MATCH_ONLY = False
+BEST_MATCH_ONLY = True
 CHEAT_FOLDERS = ['103', '47', '121', '165', '34', '158', '55']
 HAY_SIZE_PIXELS = 200
 NEEDLE_SIZE_PIXELS = 40
@@ -90,9 +90,10 @@ puzzle_path = '../coverraetsel_2806.webp'#passed
 puzzle_path = '../coverraetsel_2106.webp'#passed
 puzzle_path = '../coverraetsel_1704.jpg'
 puzzle_path = '../coverraetsel_0305.jpg'#passed
-puzzle_path = '../coverraetsel_3105.jpg'#passed
-puzzle_path = '../coverraetsel_1705.jpg'#passed
 puzzle_path = '../coverraetsel_1406.webp'#passed
+puzzle_path = '../coverraetsel_1705.jpg'#passed
+puzzle_path = '../coverraetsel_3105.jpg'#passed
+puzzle_path = '../coverraetsel_1207.webp'#partially passed
 
 pixel_size_vec = np.linspace(NEEDLE_MIN_PIXEL_SIZE, NEEDLE_MAX_PIXEL_SIZE,
                              int((NEEDLE_MAX_PIXEL_SIZE-NEEDLE_MIN_PIXEL_SIZE)/5))
