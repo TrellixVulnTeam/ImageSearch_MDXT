@@ -94,6 +94,8 @@ puzzle_path = '../coverraetsel_1406.webp'#passed
 puzzle_path = '../coverraetsel_1705.jpg'#passed
 puzzle_path = '../coverraetsel_3105.jpg'#passed
 puzzle_path = '../coverraetsel_1207.webp'#partially passed
+puzzle_path = '../coverraetsel_1907.webp'#passed
+puzzle_path = '../coverraetsel_2607.webp'#partially passed
 
 pixel_size_vec = np.linspace(NEEDLE_MIN_PIXEL_SIZE, NEEDLE_MAX_PIXEL_SIZE,
                              int((NEEDLE_MAX_PIXEL_SIZE-NEEDLE_MIN_PIXEL_SIZE)/5))
